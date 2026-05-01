@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabularia — Spanisch lernen</title>
+  <style>
+    /* ===== Design-Tokens ===== */
+    :root {
+      /* Farbschema mit spanischem Flair: tiefes Marineblau als Basis,
+         warmes Rot und sonnengelber Akzent */
+      --c-bg:        #0d1b2a;
+      --c-bg-elev:   #15293f;
+      --c-surface:   #1d3557;
+      --c-border:    #2a4a73;
+      --c-text:      #f1faee;
+      --c-text-mute: #a8b8cc;
+      --c-red:       #e63946;
+      --c-red-soft:  #c1272d;
+      --c-yellow:    #f4c430;
+      --c-yellow-warm: #e8a317;
+      --c-success:   #52b788;
+      --c-error:     #e5383b;
+
+      --r-sm: 6px;
+      --r-md: 12px;
+      --r-lg: 20px;
+
+      --shadow-card:  0 10px 40px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2);
+      --shadow-glow:  0 0 0 3px rgba(244, 196, 48, 0.25);
+
+      --font-display: "Playfair Display", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      color: var(--c-text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(230, 57, 70, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 80% 100%, rgba(244, 196, 48, 0.10) 0%, transparent 40%),
+        var(--c-bg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Layout ===== */
+    .app {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      min-height: 100vh;
+    }
+
+    header.brand {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 8px 4px 28px;
+      border-bottom: 1px solid var(--c-border);
+      margin-bottom: 32px;
+    }
+    header.brand h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    header.brand h1 .accent { color: var(--c-yellow); }
+    header.brand h1 .accent-red { color: var(--c-red); }
+    header.brand .tagline {
+      color: var(--c-text-mute);
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    /* ===== Modus-Tabs ===== */
+    nav.modes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    nav.modes button {
+      flex: 1 1 auto;
+      min-width: 130px;
+      padding: 12px 18px;
+      background: var(--c-bg-elev);
+      color: var(--c-text-mute);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    nav.modes button:hover {
+      color: var(--c-text);
+      border-color: var(--c-yellow);
+    }
+    nav.modes button.active {
+      background: linear-gradient(135deg, var(--c-red) 0%, var(--c-red-soft) 100%);
+      color: white;
+      border-color: var(--c-red);
+      font-weight: 600;
+    }
+
+    /* ===== Karteikarte ===== */
+    .card-stage {
+      perspective: 1500px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    .card.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    .card-face.back { transform: rotateY(180deg); }
+
+    .card-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--c-text-mute);
+      margin-bottom: 16px;
+    }
+    .card-word {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 56px);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .card-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: rgba(244, 196, 48, 0.15);
+      color: var(--c-yellow);
+      border: 1px solid rgba(244, 196, 48, 0.3);
+    }
+    .tag.red {
+      background: rgba(230, 57, 70, 0.15);
+      color: var(--c-red);
+      border-color: rgba(230, 57, 70, 0.3);
+    }
+
+    .card-example {
+      margin-top: 24px;
+      padding: 16px 20px;
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--r-md);
+      font-style: italic;
+      color: var(--c-text);
+      max-width: 100%;
+    }
+    .card-translation {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--c-text-mute);
+      font-style: italic;
+    }
+    .hint-toggle {
+      margin-top: 14px;
+      background: transparent;
+      border: 1px solid var(--c-border);
+      color: var(--c-text-mute);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .hint-toggle:hover {
+      color: var(--c-text);
+      border-color: var(--c-yellow);
+    }
+
+    .flip-hint {
+      position: absolute;
+      bottom: 14px;
+      right: 18px;
+      font-size: 11px;
+      color: var(--c-text-mute);
+      letter-spacing: 1px;
+      opacity: 0.7;
+    }
+
+    /* ===== Aktions-Buttons ===== */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .actions button {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: var(--r-md);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .actions button:active { transform: scale(0.97); }
+    .btn-wrong {
+      background: linear-gradient(135deg, var(--c-red) 0%, var(--c-red-soft) 100%);
+      color: white;
+    }
+    .btn-wrong:hover { box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4); }
+    .btn-right {
+      background: linear-gradient(135deg, var(--c-success) 0%, #2d8f5f 100%);
+      color: white;
+    }
+    .btn-right:hover { box-shadow: 0 6px 20px rgba(82, 183, 136, 0.4); }
+
+    /* ===== Steuerung ===== */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      margin-bottom: 24px;
+      background: var(--c-bg-elev);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+    }
+    .control-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .control-group label {
+      font-size: 13px;
+      color: var(--c-text-mute);
+    }
+    .pill-toggle {
+      display: inline-flex;
+      background: var(--c-bg);
+      border: 1px solid var(--c-border);
+      border-radius: 99px;
+      padding: 3px;
+    }
+    .pill-toggle button {
+      padding: 6px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 99px;
+      color: var(--c-text-mute);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pill-toggle button.active {
+      background: var(--c-yellow);
+      color: var(--c-bg);
+      font-weight: 600;
+    }
+
+    /* ===== Stats-Leiste ===== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--c-bg-elev);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--c-yellow);
+    }
+    .stat-label {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--c-text-mute);
+      margin-top: 4px;
+    }
+
+    /* ===== Footer / Reset ===== */
+    footer.utility {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--c-border);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    footer.utility button {
+      background: transparent;
+      border: 1px solid var(--c-border);
+      color: var(--c-text-mute);
+      padding: 8px 16px;
+      border-radius: var(--r-sm);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    footer.utility button:hover {
+      color: var(--c-red);
+      border-color: var(--c-red);
+    }
+
+    /* ===== Feedback-Animationen ===== */
+    @keyframes flashGreen {
+      0%   { background-color: rgba(82, 183, 136, 0); }
+      30%  { background-color: rgba(82, 183, 136, 0.25); }
+      100% { background-color: rgba(82, 183, 136, 0); }
+    }
+    @keyframes flashRed {
+      0%   { background-color: rgba(230, 57, 70, 0); }
+      30%  { background-color: rgba(230, 57, 70, 0.25); }
+      100% { background-color: rgba(230, 57, 70, 0); }
+    }
+    .flash-green { animation: flashGreen 0.6s ease-out; }
+    .flash-red   { animation: flashRed   0.6s ease-out; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-face { animation: slideIn 0.3s ease-out; }
+
+    /* ===== Mobile-Anpassungen ===== */
+    @media (max-width: 600px) {
+      .app { padding: 16px 14px 40px; }
+      header.brand { flex-direction: column; gap: 4px; align-items: flex-start; }
+      .card { min-height: 280px; }
+      .card-face { padding: 28px 20px; }
+      nav.modes button { min-width: 0; flex: 1 1 45%; padding: 10px 12px; font-size: 13px; }
+    }
+
+    /* Modi außer Karteikarten erstmal verstecken */
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+    .placeholder {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--c-text-mute);
+      background: var(--c-bg-elev);
+      border: 1px dashed var(--c-border);
+      border-radius: var(--r-md);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <header class="brand">
+      <h1>Vocabul<span class="accent">a</span>r<span class="accent-red">i</span>a</h1>
+      <span class="tagline">— Spanisch lernen, Wort für Wort</span>
+    </header>
+
+    <!-- Stats-Leiste -->
+    <section class="stats" id="stats">
+      <div class="stat">
+        <div class="stat-value" id="stat-learned">0</div>
+        <div class="stat-label">Gelernt</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Gesamt</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-session">0</div>
+        <div class="stat-label">Diese Sitzung</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-accuracy">—</div>
+        <div class="stat-label">Genauigkeit</div>
+      </div>
+    </section>
+
+    <!-- Modus-Auswahl -->
+    <nav class="modes" id="modes">
+      <button data-mode="cards" class="active">Karteikarten</button>
+      <button data-mode="cloze">Lückentext</button>
+      <button data-mode="choice">Multiple Choice</button>
+      <button data-mode="topic">Themen</button>
+      <button data-mode="dashboard">Dashboard</button>
+    </nav>
+
+    <!-- Karteikarten-Modus -->
+    <section class="mode-panel active" id="panel-cards">
+
+      <div class="controls">
+        <div class="control-group">
+          <label>Richtung:</label>
+          <div class="pill-toggle" id="direction-toggle">
+            <button data-dir="de-es" class="active">DE → ES</button>
+            <button data-dir="es-de">ES → DE</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <button class="hint-toggle" id="next-card-btn">Nächstes Wort →</button>
+        </div>
+      </div>
+
+      <div class="card-stage">
+        <div class="card" id="card">
+          <div class="card-face front" id="card-front">
+            <div class="card-label" id="front-label">Deutsch</div>
+            <div class="card-word" id="front-word">—</div>
+            <div class="card-meta" id="front-meta"></div>
+            <div class="flip-hint">tippen zum Umdrehen</div>
+          </div>
+          <div class="card-face back" id="card-back">
+            <div class="card-label" id="back-label">Spanisch</div>
+            <div class="card-word" id="back-word">—</div>
+            <div class="card-meta" id="back-meta"></div>
+            <div class="card-example" id="back-example" style="display:none">
+              <div id="example-text">—</div>
+              <button class="hint-toggle" id="translate-btn">Übersetzung anzeigen</button>
+              <div class="card-translation" id="example-translation" style="display:none">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-wrong" id="btn-wrong">✗ Wusste ich nicht</button>
+        <button class="btn-right" id="btn-right">✓ Wusste ich</button>
+      </div>
+    </section>
+
+    <!-- Andere Modi: Platzhalter für nächste Etappen -->
+    <section class="mode-panel" id="panel-cloze">
+      <div class="placeholder">Lückentext-Modus — kommt in Etappe 3</div>
+    </section>
+    <section class="mode-panel" id="panel-choice">
+      <div class="placeholder">Multiple Choice — kommt in Etappe 3</div>
+    </section>
+    <section class="mode-panel" id="panel-topic">
+      <div class="placeholder">Themen-Modus — kommt in Etappe 4</div>
+    </section>
+    <section class="mode-panel" id="panel-dashboard">
+      <div class="placeholder">Dashboard mit Diagramm und Badges — kommt in Etappe 5</div>
+    </section>
+
+    <footer class="utility">
+      <button id="btn-reset-session">Sitzung zurücksetzen</button>
+      <button id="btn-reset-all">Alle Fortschritte löschen</button>
+    </footer>
+
+  </div>
+
+  <!-- Vokabeldaten -->
+  <script src="vocab.js"></script>
+
+  <!-- App-Logik -->
+  <script>
+    /* =========================================================
+       Vocabularia — App-Logik
+       Etappe 1+2: Grundgerüst, Karteikarten, localStorage
+       ========================================================= */
+
+    // ---- Konstanten ----
+    const STORAGE_KEY = "vocabularia.v1";
+    const SESSION_KEY = "vocabularia.session.v1";
+
+    // ---- App-Zustand ----
+    const state = {
+      direction: "de-es",      // "de-es" oder "es-de"
+      mode: "cards",
+      currentWord: null,
+      isFlipped: false,
+      // Persistente Daten:
+      scores: {},              // { [wordId]: { score, seen, correct, wrong, lastSeen } }
+      // Sitzungs-Daten:
+      session: { correct: 0, wrong: 0, started: Date.now() },
+    };
+
+    // ---- localStorage ----
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          state.scores = data.scores || {};
+          state.direction = data.direction || "de-es";
+        }
+        const sessRaw = localStorage.getItem(SESSION_KEY);
+        if (sessRaw) {
+          const today = new Date().toDateString();
+          const sess = JSON.parse(sessRaw);
+          if (sess.day === today) {
+            state.session = sess.session;
+          }
+        }
+      } catch (e) {
+        console.warn("State konnte nicht geladen werden:", e);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          scores: state.scores,
+          direction: state.direction,
+        }));
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+          day: new Date().toDateString(),
+          session: state.session,
+        }));
+      } catch (e) {
+        console.warn("State konnte nicht gespeichert werden:", e);
+      }
+    }
+
+    function getWordScore(id) {
+      return state.scores[id] || { score: 0, seen: 0, correct: 0, wrong: 0, lastSeen: 0 };
+    }
+
+    function updateWordScore(id, wasCorrect) {
+      const cur = getWordScore(id);
+      const next = {
+        score: wasCorrect ? cur.score + 1 : Math.max(0, cur.score - 1),
+        seen: cur.seen + 1,
+        correct: cur.correct + (wasCorrect ? 1 : 0),
+        wrong:   cur.wrong   + (wasCorrect ? 0 : 1),
+        lastSeen: Date.now(),
+      };
+      state.scores[id] = next;
+      if (wasCorrect) state.session.correct++;
+      else            state.session.wrong++;
+      saveState();
+    }
+
+    // ---- Wortauswahl mit Gewichtung ----
+    // Niedriger Score = höhere Wahrscheinlichkeit. Neue Wörter (seen=0)
+    // werden bevorzugt: ihnen wird ein hohes Gewicht zugewiesen.
+    function pickWeightedWord(pool) {
+      if (pool.length === 0) return null;
+
+      const weights = pool.map(w => {
+        const s = getWordScore(w.id);
+        if (s.seen === 0) return 8;         // unbekannt → stark bevorzugt
+        return Math.max(1, 6 - s.score);    // 6, 5, 4, ... 1
+      });
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < pool.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return pool[i];
+      }
+      return pool[pool.length - 1];
+    }
+
+    function nextWord() {
+      // Gleiches Wort nicht zweimal hintereinander zeigen, wenn möglich
+      let candidates = VOCAB;
+      if (state.currentWord && VOCAB.length > 1) {
+        candidates = VOCAB.filter(w => w.id !== state.currentWord.id);
+      }
+      state.currentWord = pickWeightedWord(candidates);
+      state.isFlipped = false;
+      renderCard();
+    }
+
+    // ---- Rendering ----
+    const $ = id => document.getElementById(id);
+
+    function renderCard() {
+      const w = state.currentWord;
+      if (!w) return;
+
+      const card = $("card");
+      card.classList.remove("flipped");
+
+      const showSpanishFirst = state.direction === "es-de";
+
+      // Vorderseite
+      $("front-label").textContent = showSpanishFirst ? "Spanisch" : "Deutsch";
+      $("front-word").textContent  = showSpanishFirst ? w.spanisch : w.deutsch;
+      $("front-meta").innerHTML    = `<span class="tag">${w.wortart}</span><span class="tag red">${w.thema}</span>`;
+
+      // Rückseite
+      $("back-label").textContent  = showSpanishFirst ? "Deutsch" : "Spanisch";
+      $("back-word").textContent   = showSpanishFirst ? w.deutsch : w.spanisch;
+      $("back-meta").innerHTML     = `<span class="tag">Niveau ${w.level}</span>`;
+
+      // Beispielsatz (immer auf Spanisch, ist die Lernsprache)
+      if (w.beispielSpanisch) {
+        const filled = w.beispielSpanisch.replace("___", `<strong style="color: var(--c-yellow)">${w.loesung}</strong>`);
+        $("example-text").innerHTML = filled;
+        $("example-translation").textContent = w.beispielUebersetzung || "";
+        $("example-translation").style.display = "none";
+        $("translate-btn").textContent = "Übersetzung anzeigen";
+        $("back-example").style.display = "block";
+      } else {
+        $("back-example").style.display = "none";
+      }
+
+      renderStats();
+    }
+
+    function renderStats() {
+      const total = VOCAB.length;
+      const learned = Object.values(state.scores).filter(s => s.score >= 3).length;
+      const sessTotal = state.session.correct + state.session.wrong;
+      const acc = sessTotal === 0
+        ? "—"
+        : Math.round(state.session.correct / sessTotal * 100) + "%";
+
+      $("stat-total").textContent    = total;
+      $("stat-learned").textContent  = learned;
+      $("stat-session").textContent  = sessTotal;
+      $("stat-accuracy").textContent = acc;
+    }
+
+    function flashFeedback(correct) {
+      const card = $("card");
+      const cls = correct ? "flash-green" : "flash-red";
+      card.classList.remove("flash-green", "flash-red");
+      // Reflow erzwingen, damit die Animation neu startet
+      void card.offsetWidth;
+      card.classList.add(cls);
+    }
+
+    // ---- Event-Bindings ----
+    function bindEvents() {
+      // Karte umdrehen bei Klick
+      $("card").addEventListener("click", (e) => {
+        // Klicks auf Buttons innerhalb der Karte nicht weiterleiten
+        if (e.target.closest("button")) return;
+        state.isFlipped = !state.isFlipped;
+        $("card").classList.toggle("flipped", state.isFlipped);
+      });
+
+      // Antwort-Buttons
+      $("btn-right").addEventListener("click", () => {
+        if (!state.currentWord) return;
+        updateWordScore(state.currentWord.id, true);
+        flashFeedback(true);
+        setTimeout(nextWord, 450);
+      });
+      $("btn-wrong").addEventListener("click", () => {
+        if (!state.currentWord) return;
+        updateWordScore(state.currentWord.id, false);
+        flashFeedback(false);
+        setTimeout(nextWord, 450);
+      });
+
+      // Nächstes Wort manuell
+      $("next-card-btn").addEventListener("click", nextWord);
+
+      // Übersetzung einblenden
+      $("translate-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const tr = $("example-translation");
+        const visible = tr.style.display !== "none";
+        tr.style.display = visible ? "none" : "block";
+        e.target.textContent = visible ? "Übersetzung anzeigen" : "Übersetzung verbergen";
+      });
+
+      // Richtungs-Umschalter
+      document.querySelectorAll("#direction-toggle button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#direction-toggle button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state.direction = btn.dataset.dir;
+          saveState();
+          renderCard();
+        });
+      });
+
+      // Modus-Tabs
+      document.querySelectorAll("#modes button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#modes button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state.mode = btn.dataset.mode;
+          document.querySelectorAll(".mode-panel").forEach(p => p.classList.remove("active"));
+          $("panel-" + state.mode).classList.add("active");
+        });
+      });
+
+      // Reset-Buttons
+      $("btn-reset-session").addEventListener("click", () => {
+        if (confirm("Sitzung wirklich zurücksetzen? Fortschritt der Wörter bleibt erhalten.")) {
+          state.session = { correct: 0, wrong: 0, started: Date.now() };
+          saveState();
+          renderStats();
+        }
+      });
+      $("btn-reset-all").addEventListener("click", () => {
+        if (confirm("ALLE Fortschritte löschen? Das kann nicht rückgängig gemacht werden.")) {
+          state.scores = {};
+          state.session = { correct: 0, wrong: 0, started: Date.now() };
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(SESSION_KEY);
+          renderCard();
+          renderStats();
+        }
+      });
+    }
+
+    // ---- Initialisierung ----
+    function init() {
+      if (!window.VOCAB || !VOCAB.length) {
+        document.body.innerHTML = "<div style='padding:40px;color:#fff'>Fehler: vocab.js konnte nicht geladen werden.</div>";
+        return;
+      }
+      loadState();
+
+      // Richtungs-Toggle synchronisieren
+      document.querySelectorAll("#direction-toggle button").forEach(b => {
+        b.classList.toggle("active", b.dataset.dir === state.direction);
+      });
+
+      bindEvents();
+      nextWord();
+    }
+
+    // Start
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
