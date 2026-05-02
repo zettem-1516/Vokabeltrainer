@@ -304,6 +304,86 @@
     }
 
     /* ===== Stats-Leiste ===== */
+    /* ===== Mehrstufiger Fortschritt ===== */
+    .progress-section {
+      background: var(--c-bg-elev);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .progress-title {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--c-text-mute);
+    }
+    .progress-summary {
+      font-family: var(--font-display);
+      font-size: 16px;
+      color: var(--c-yellow);
+      font-weight: 600;
+    }
+    .progress-bar {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      background: var(--c-bg);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .progress-seg {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* Im Lernen: gelb, links beginnend */
+    .seg-learning {
+      left: 0;
+      background: linear-gradient(90deg, var(--c-yellow-warm), var(--c-yellow));
+      width: 0;
+    }
+    /* Gefestigt: grün, schließt rechts an seg-learning an */
+    .seg-mastered {
+      background: linear-gradient(90deg, var(--c-success), #2d8f5f);
+      width: 0;
+      left: 0;
+    }
+    .progress-legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--c-text-mute);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-new      { background: var(--c-bg); border: 1px solid var(--c-border); }
+    .dot-learning { background: var(--c-yellow); }
+    .dot-mastered { background: var(--c-success); }
+    .legend-text strong {
+      color: var(--c-text);
+      margin-left: 3px;
+      font-family: var(--font-display);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -407,16 +487,34 @@
       <span class="tagline">— Spanisch lernen, Wort für Wort</span>
     </header>
 
-    <!-- Stats-Leiste -->
+    <!-- Stats-Leiste mit mehrstufigem Fortschritt -->
+    <section class="progress-section" id="progress-section">
+      <div class="progress-header">
+        <div class="progress-title">Mein Fortschritt</div>
+        <div class="progress-summary" id="progress-summary">0 / 0 Wörter</div>
+      </div>
+      <div class="progress-bar" id="progress-bar" aria-label="Lernfortschritt">
+        <div class="progress-seg seg-learning" id="seg-learning" title="Im Lernen"></div>
+        <div class="progress-seg seg-mastered" id="seg-mastered" title="Gefestigt"></div>
+      </div>
+      <div class="progress-legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-new"></span>
+          <span class="legend-text">Neu <strong id="count-new">0</strong></span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-learning"></span>
+          <span class="legend-text">Im Lernen <strong id="count-learning">0</strong></span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-mastered"></span>
+          <span class="legend-text">Gefestigt <strong id="count-mastered">0</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sitzungs-Stats -->
     <section class="stats" id="stats">
-      <div class="stat">
-        <div class="stat-value" id="stat-learned">0</div>
-        <div class="stat-label">Gelernt</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="stat-total">0</div>
-        <div class="stat-label">Gesamt</div>
-      </div>
       <div class="stat">
         <div class="stat-value" id="stat-session">0</div>
         <div class="stat-label">Diese Sitzung</div>
@@ -424,6 +522,10 @@
       <div class="stat">
         <div class="stat-value" id="stat-accuracy">—</div>
         <div class="stat-label">Genauigkeit</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Streak</div>
       </div>
     </section>
 
@@ -672,18 +774,80 @@
       renderStats();
     }
 
+    /**
+     * Bestimmt die Lernstufe eines Wortes:
+     *  - "new":      noch nie gesehen
+     *  - "learning": gesehen, aber noch nicht gefestigt (Score < 3)
+     *  - "mastered": Score ≥ 3 — gilt als gefestigt
+     */
+    function getMasteryLevel(wordId) {
+      const s = state.scores[wordId];
+      if (!s || s.seen === 0) return "new";
+      if (s.score >= 3)       return "mastered";
+      return "learning";
+    }
+
     function renderStats() {
       const total = VOCAB.length;
-      const learned = Object.values(state.scores).filter(s => s.score >= 3).length;
+
+      // Wörter pro Lernstufe zählen
+      let countNew = 0, countLearning = 0, countMastered = 0;
+      VOCAB.forEach(w => {
+        const lvl = getMasteryLevel(w.id);
+        if      (lvl === "mastered") countMastered++;
+        else if (lvl === "learning") countLearning++;
+        else                         countNew++;
+      });
+
+      // Sitzungs-Genauigkeit
       const sessTotal = state.session.correct + state.session.wrong;
       const acc = sessTotal === 0
         ? "—"
         : Math.round(state.session.correct / sessTotal * 100) + "%";
 
-      $("stat-total").textContent    = total;
-      $("stat-learned").textContent  = learned;
+      // Fortschrittsbalken (gelb = learning, grün = mastered, schließt rechts an)
+      const pctLearning = total > 0 ? (countLearning / total * 100) : 0;
+      const pctMastered = total > 0 ? (countMastered / total * 100) : 0;
+      const segLearning = $("seg-learning");
+      const segMastered = $("seg-mastered");
+      if (segLearning && segMastered) {
+        segLearning.style.width = pctLearning + "%";
+        segMastered.style.left  = pctLearning + "%";
+        segMastered.style.width = pctMastered + "%";
+      }
+
+      // Legenden-Zahlen
+      $("count-new").textContent      = countNew;
+      $("count-learning").textContent = countLearning;
+      $("count-mastered").textContent = countMastered;
+      $("progress-summary").textContent = `${countMastered} / ${total} Wörter gefestigt`;
+
+      // Sitzungs-Stats
       $("stat-session").textContent  = sessTotal;
       $("stat-accuracy").textContent = acc;
+      $("stat-streak").textContent   = computeStreak();
+    }
+
+    /**
+     * Streak: Anzahl aufeinanderfolgender Tage mit mindestens einer Antwort.
+     * Wir leiten das aus den lastSeen-Zeitstempeln der Wörter ab.
+     */
+    function computeStreak() {
+      const days = new Set();
+      Object.values(state.scores).forEach(s => {
+        if (s.lastSeen) {
+          days.add(new Date(s.lastSeen).toDateString());
+        }
+      });
+      if (days.size === 0) return 0;
+
+      let streak = 0;
+      const cursor = new Date();
+      while (days.has(cursor.toDateString())) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
     }
 
     function flashFeedback(correct) {
