@@ -144,6 +144,13 @@
     }
     .card-face.back { transform: rotateY(180deg); }
 
+    /* Beim Wechsel zum nächsten Wort: Während die Karte zurückklappt,
+       Inhalte ausblenden, damit das neue Wort nicht durchblitzt ("Spicken"). */
+    .card.turning .card-face > * {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
     .card-label {
       font-size: 11px;
       letter-spacing: 2px;
@@ -601,9 +608,31 @@
       if (state.currentWord && VOCAB.length > 1) {
         candidates = VOCAB.filter(w => w.id !== state.currentWord.id);
       }
-      state.currentWord = pickWeightedWord(candidates);
-      state.isFlipped = false;
-      renderCard();
+      const newWord = pickWeightedWord(candidates);
+
+      // Wenn die Karte gerade umgedreht ist: erst zurückdrehen,
+      // dann nach Abschluss der Animation den Inhalt austauschen.
+      // Sonst würde das neue Wort kurz auf der Rückseite aufblitzen
+      // ("Spicken") bevor sich die Karte schließt.
+      const card = $("card");
+      const wasFlipped = card.classList.contains("flipped");
+
+      if (wasFlipped) {
+        // Während der Drehung Inhalt verbergen, damit nichts durchblitzt
+        card.classList.add("turning");
+        card.classList.remove("flipped");
+        state.isFlipped = false;
+
+        setTimeout(() => {
+          state.currentWord = newWord;
+          renderCard();
+          card.classList.remove("turning");
+        }, 600); // muss mit der CSS-Transition-Dauer übereinstimmen
+      } else {
+        state.currentWord = newWord;
+        state.isFlipped = false;
+        renderCard();
+      }
     }
 
     // ---- Rendering ----
