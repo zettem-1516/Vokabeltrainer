@@ -423,6 +423,56 @@
     }
     .cloze-next-btn:hover { border-color: var(--c-yellow); color: var(--c-yellow); }
 
+    /* Empty-State, wenn Filter keine Wörter findet */
+    .cloze-empty {
+      background: var(--c-bg-elev);
+      border: 1px dashed var(--c-border);
+      border-radius: var(--r-lg);
+      padding: 48px 28px;
+      text-align: center;
+    }
+    .cloze-empty-icon {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+    .cloze-empty-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--c-text);
+      margin-bottom: 8px;
+    }
+    .cloze-empty-text {
+      color: var(--c-text-mute);
+      max-width: 420px;
+      margin: 0 auto 24px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .cloze-empty-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cloze-empty-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--c-yellow) 0%, var(--c-yellow-warm) 100%);
+      color: var(--c-bg);
+      border: none;
+      border-radius: var(--r-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .cloze-empty-btn.secondary {
+      background: transparent;
+      color: var(--c-text-mute);
+      border: 1px solid var(--c-border);
+    }
+    .cloze-empty-btn:hover { transform: translateY(-1px); }
+
     @media (max-width: 600px) {
       .cloze-card { padding: 24px 20px; }
       .cloze-input-row { flex-direction: column; }
@@ -756,7 +806,18 @@
 
     <!-- Lückentext-Modus -->
     <section class="mode-panel" id="panel-cloze">
-      <div class="cloze-card">
+      <div class="controls">
+        <div class="control-group">
+          <label>Auswahl:</label>
+          <div class="pill-toggle" id="cloze-filter-toggle">
+            <button data-filter="seen"     title="Nur Wörter, die du schon gesehen hast">Schon gesehen</button>
+            <button data-filter="correct"  class="active" title="Nur Wörter, die du schon mal richtig hattest">Schon richtig</button>
+            <button data-filter="all"      title="Alle Wörter, auch unbekannte">Alle</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cloze-card" id="cloze-card-content">
         <div class="cloze-meta" id="cloze-meta"></div>
 
         <div class="cloze-sentence" id="cloze-sentence">—</div>
@@ -781,6 +842,19 @@
         <div class="cloze-translation" id="cloze-translation" style="display:none">—</div>
 
         <div class="cloze-feedback" id="cloze-feedback"></div>
+      </div>
+
+      <!-- Empty-State: wird nur angezeigt, wenn der Filter keine passenden Wörter findet -->
+      <div class="cloze-empty" id="cloze-empty" style="display:none">
+        <div class="cloze-empty-icon">🌱</div>
+        <div class="cloze-empty-title">Noch keine Wörter bereit</div>
+        <div class="cloze-empty-text" id="cloze-empty-text">
+          Lerne erst ein paar Wörter im Karteikarten-Modus — dann tauchen sie hier auf.
+        </div>
+        <div class="cloze-empty-actions">
+          <button class="cloze-empty-btn" id="cloze-empty-cards">Zu den Karteikarten</button>
+          <button class="cloze-empty-btn secondary" id="cloze-empty-relax">Filter lockern</button>
+        </div>
       </div>
     </section>
     <section class="mode-panel" id="panel-choice">
@@ -834,6 +908,7 @@
           const data = JSON.parse(raw);
           state.scores = data.scores || {};
           state.direction = data.direction || "de-es";
+          if (data.clozeFilter) cloze.filter = data.clozeFilter;
         }
         const sessRaw = localStorage.getItem(SESSION_KEY);
         if (sessRaw) {
@@ -853,6 +928,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           scores: state.scores,
           direction: state.direction,
+          clozeFilter: cloze.filter,
         }));
         localStorage.setItem(SESSION_KEY, JSON.stringify({
           day: new Date().toDateString(),
@@ -1064,6 +1140,7 @@
     const cloze = {
       currentWord: null,
       answered: false,    // Wurde die aktuelle Frage schon geprüft?
+      filter: "correct",  // "correct" | "seen" | "all" — Default: nur schon richtig beantwortete
     };
 
     /**
@@ -1103,14 +1180,36 @@
     }
 
     /**
+     * Liefert die Wörter, die zur aktuellen Filterstufe passen.
+     * Verwendet auch von pickClozeWord und der Empty-State-Erkennung.
+     */
+    function getClozePool() {
+      const base = VOCAB.filter(w => w.beispielSpanisch && w.loesung);
+      if (cloze.filter === "all") return base;
+      if (cloze.filter === "seen") {
+        return base.filter(w => {
+          const s = state.scores[w.id];
+          return s && s.seen > 0;
+        });
+      }
+      // "correct"
+      return base.filter(w => {
+        const s = state.scores[w.id];
+        return s && s.correct > 0;
+      });
+    }
+
+    /**
      * Wählt das nächste Lückentext-Wort.
-     * Nur Wörter mit Beispielsatz; gleiche gewichtete Auswahl wie bei Karteikarten.
+     * Nur Wörter aus dem aktuellen Pool (gefiltert); gleiche gewichtete
+     * Auswahl wie bei Karteikarten.
      */
     function pickClozeWord() {
-      let pool = VOCAB.filter(w => w.beispielSpanisch && w.loesung);
+      let pool = getClozePool();
       if (cloze.currentWord && pool.length > 1) {
         pool = pool.filter(w => w.id !== cloze.currentWord.id);
       }
+      if (pool.length === 0) return null;
       return pickWeightedWord(pool);
     }
 
@@ -1246,7 +1345,34 @@
 
     function nextClozeWord() {
       cloze.currentWord = pickClozeWord();
+      const cardEl  = $("cloze-card-content");
+      const emptyEl = $("cloze-empty");
+
+      if (!cloze.currentWord) {
+        // Kein passendes Wort im aktuellen Filter — Empty-State zeigen
+        cardEl.style.display = "none";
+        emptyEl.style.display = "block";
+        $("cloze-empty-text").textContent = getEmptyStateText();
+        return;
+      }
+
+      cardEl.style.display = "block";
+      emptyEl.style.display = "none";
       renderClozeQuestion();
+    }
+
+    /**
+     * Erklärt dem Lerner, warum gerade keine Wörter angezeigt werden,
+     * abhängig vom aktuellen Filter.
+     */
+    function getEmptyStateText() {
+      if (cloze.filter === "correct") {
+        return "Hier erscheinen Wörter, die du in den Karteikarten oder im Lückentext schon mindestens einmal richtig hattest. Lerne ein paar Wörter mit den Karteikarten — dann tauchen sie hier auf.";
+      }
+      if (cloze.filter === "seen") {
+        return "Hier erscheinen Wörter, die du schon mindestens einmal gesehen hast. Schau ein paar Karteikarten an — dann geht es hier weiter.";
+      }
+      return "Es gibt keine Wörter mit Beispielsatz im Datensatz.";
     }
 
     // =========================================================
@@ -1338,6 +1464,31 @@
         $("cloze-translate-btn").textContent = visible ? "Übersetzung anzeigen" : "Übersetzung verbergen";
       });
 
+      // Lückentext: Filter umschalten (Schon richtig / Schon gesehen / Alle)
+      document.querySelectorAll("#cloze-filter-toggle button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#cloze-filter-toggle button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          cloze.filter = btn.dataset.filter;
+          saveState();
+          // Aktuelles Wort verwerfen und neues aus dem neuen Pool wählen
+          cloze.currentWord = null;
+          nextClozeWord();
+        });
+      });
+
+      // Lückentext: Empty-State-Buttons
+      $("cloze-empty-cards").addEventListener("click", () => {
+        // Auf Karteikarten-Tab wechseln
+        document.querySelector('#modes button[data-mode="cards"]').click();
+      });
+      $("cloze-empty-relax").addEventListener("click", () => {
+        // Filter eine Stufe lockerer setzen
+        const next = cloze.filter === "correct" ? "seen" : "all";
+        const targetBtn = document.querySelector(`#cloze-filter-toggle button[data-filter="${next}"]`);
+        if (targetBtn) targetBtn.click();
+      });
+
       // Reset-Buttons
       $("btn-reset-session").addEventListener("click", () => {
         if (confirm("Sitzung wirklich zurücksetzen? Fortschritt der Wörter bleibt erhalten.")) {
@@ -1372,6 +1523,11 @@
       // Richtungs-Toggle synchronisieren
       document.querySelectorAll("#direction-toggle button").forEach(b => {
         b.classList.toggle("active", b.dataset.dir === state.direction);
+      });
+
+      // Lückentext-Filter-Toggle synchronisieren
+      document.querySelectorAll("#cloze-filter-toggle button").forEach(b => {
+        b.classList.toggle("active", b.dataset.filter === cloze.filter);
       });
 
       bindEvents();
