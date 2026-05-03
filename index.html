@@ -256,6 +256,179 @@
     }
     .btn-right:hover { box-shadow: 0 6px 20px rgba(82, 183, 136, 0.4); }
 
+    /* ===== Lückentext-Modus ===== */
+    .cloze-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-card);
+      animation: slideIn 0.3s ease-out;
+    }
+    .cloze-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .cloze-sentence {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3.5vw, 32px);
+      line-height: 1.4;
+      text-align: center;
+      padding: 16px 0 28px;
+      font-weight: 500;
+    }
+    .cloze-sentence .gap {
+      display: inline-block;
+      min-width: 80px;
+      padding: 0 12px;
+      margin: 0 4px;
+      border-bottom: 3px solid var(--c-yellow);
+      color: var(--c-yellow);
+      font-style: italic;
+    }
+    .cloze-sentence .gap.revealed {
+      color: var(--c-success);
+      border-bottom-color: var(--c-success);
+      font-style: normal;
+      font-weight: 600;
+    }
+    .cloze-sentence .gap.wrong {
+      color: var(--c-error);
+      border-bottom-color: var(--c-error);
+      font-style: normal;
+      text-decoration: line-through;
+      text-decoration-color: rgba(229, 56, 59, 0.6);
+    }
+
+    .cloze-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .cloze-input {
+      flex: 1;
+      padding: 14px 18px;
+      background: var(--c-bg);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      color: var(--c-text);
+      font-family: inherit;
+      font-size: 17px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      min-width: 0; /* erlaubt Schrumpfen unter content-Breite */
+    }
+    .cloze-input:focus {
+      outline: none;
+      border-color: var(--c-yellow);
+      box-shadow: var(--shadow-glow);
+    }
+    .cloze-input.correct {
+      border-color: var(--c-success);
+      background: rgba(82, 183, 136, 0.08);
+    }
+    .cloze-input.incorrect {
+      border-color: var(--c-error);
+      background: rgba(230, 57, 70, 0.08);
+    }
+    .cloze-input:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .cloze-submit {
+      padding: 14px 24px;
+      background: linear-gradient(135deg, var(--c-yellow) 0%, var(--c-yellow-warm) 100%);
+      color: var(--c-bg);
+      border: none;
+      border-radius: var(--r-md);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      white-space: nowrap;
+    }
+    .cloze-submit:hover { box-shadow: 0 6px 20px rgba(244, 196, 48, 0.35); }
+    .cloze-submit:active { transform: scale(0.97); }
+    .cloze-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .cloze-helpers {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .cloze-translation {
+      text-align: center;
+      font-size: 14px;
+      color: var(--c-text-mute);
+      font-style: italic;
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.18);
+      border-radius: var(--r-sm);
+      margin-bottom: 16px;
+    }
+
+    .cloze-feedback {
+      min-height: 0;
+      padding: 0;
+      border-radius: var(--r-md);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .cloze-feedback.show {
+      min-height: 60px;
+      padding: 14px 18px;
+      margin-top: 8px;
+    }
+    .cloze-feedback.success {
+      background: rgba(82, 183, 136, 0.15);
+      border-left: 4px solid var(--c-success);
+    }
+    .cloze-feedback.error {
+      background: rgba(230, 57, 70, 0.12);
+      border-left: 4px solid var(--c-error);
+    }
+    .cloze-feedback.almost {
+      background: rgba(244, 196, 48, 0.12);
+      border-left: 4px solid var(--c-yellow);
+    }
+    .cloze-feedback-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .cloze-feedback-detail {
+      font-size: 14px;
+      color: var(--c-text-mute);
+    }
+    .cloze-feedback-detail strong {
+      color: var(--c-text);
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+    .cloze-next-btn {
+      margin-top: 12px;
+      padding: 10px 20px;
+      background: var(--c-bg-elev);
+      color: var(--c-text);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .cloze-next-btn:hover { border-color: var(--c-yellow); color: var(--c-yellow); }
+
+    @media (max-width: 600px) {
+      .cloze-card { padding: 24px 20px; }
+      .cloze-input-row { flex-direction: column; }
+      .cloze-submit { width: 100%; }
+    }
+
     /* ===== Steuerung ===== */
     .controls {
       display: flex;
@@ -581,9 +754,34 @@
       </div>
     </section>
 
-    <!-- Andere Modi: Platzhalter für nächste Etappen -->
+    <!-- Lückentext-Modus -->
     <section class="mode-panel" id="panel-cloze">
-      <div class="placeholder">Lückentext-Modus — kommt in Etappe 3</div>
+      <div class="cloze-card">
+        <div class="cloze-meta" id="cloze-meta"></div>
+
+        <div class="cloze-sentence" id="cloze-sentence">—</div>
+
+        <div class="cloze-input-row">
+          <input
+            type="text"
+            id="cloze-input"
+            class="cloze-input"
+            placeholder="Lösung eingeben…"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            inputmode="text">
+          <button id="cloze-submit" class="cloze-submit">Prüfen</button>
+        </div>
+
+        <div class="cloze-helpers">
+          <button class="hint-toggle" id="cloze-translate-btn">Übersetzung anzeigen</button>
+        </div>
+        <div class="cloze-translation" id="cloze-translation" style="display:none">—</div>
+
+        <div class="cloze-feedback" id="cloze-feedback"></div>
+      </div>
     </section>
     <section class="mode-panel" id="panel-choice">
       <div class="placeholder">Multiple Choice — kommt in Etappe 3</div>
@@ -859,6 +1057,199 @@
       card.classList.add(cls);
     }
 
+    // =========================================================
+    // ---- Lückentext-Modus ----
+    // =========================================================
+
+    const cloze = {
+      currentWord: null,
+      answered: false,    // Wurde die aktuelle Frage schon geprüft?
+    };
+
+    /**
+     * Normalisiert Eingabe und erwartete Lösung für toleranten Vergleich:
+     * - kleinschreibung
+     * - Akzente entfernt (á→a, é→e, í→i, ó→o, ú→u, ü→u, ñ→n)
+     * - Whitespace getrimmt
+     */
+    function normalizeForCompare(s) {
+      return s
+        .toLowerCase()
+        .normalize("NFD")           // zerlegt á in a + Akzentzeichen
+        .replace(/[\u0300-\u036f]/g, "")  // entfernt alle kombinierenden Akzente
+        .replace(/ñ/g, "n")
+        .trim();
+    }
+
+    /**
+     * Levenshtein-Distanz für "Fast richtig"-Erkennung
+     * (Tippfehler von 1 Zeichen erlauben).
+     */
+    function levenshtein(a, b) {
+      if (a === b) return 0;
+      if (!a.length) return b.length;
+      if (!b.length) return a.length;
+      const m = [];
+      for (let i = 0; i <= b.length; i++) m[i] = [i];
+      for (let j = 0; j <= a.length; j++) m[0][j] = j;
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          m[i][j] = b.charAt(i - 1) === a.charAt(j - 1)
+            ? m[i - 1][j - 1]
+            : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+        }
+      }
+      return m[b.length][a.length];
+    }
+
+    /**
+     * Wählt das nächste Lückentext-Wort.
+     * Nur Wörter mit Beispielsatz; gleiche gewichtete Auswahl wie bei Karteikarten.
+     */
+    function pickClozeWord() {
+      let pool = VOCAB.filter(w => w.beispielSpanisch && w.loesung);
+      if (cloze.currentWord && pool.length > 1) {
+        pool = pool.filter(w => w.id !== cloze.currentWord.id);
+      }
+      return pickWeightedWord(pool);
+    }
+
+    function renderClozeQuestion() {
+      const w = cloze.currentWord;
+      if (!w) return;
+
+      cloze.answered = false;
+
+      // Tags
+      $("cloze-meta").innerHTML =
+        `<span class="tag">${w.wortart}</span>` +
+        `<span class="tag red">${w.thema}</span>` +
+        `<span class="tag">Niveau ${w.level}</span>`;
+
+      // Satz mit visueller Lücke
+      const sentence = w.beispielSpanisch.replace(
+        "___",
+        `<span class="gap" id="cloze-gap">___</span>`
+      );
+      $("cloze-sentence").innerHTML = sentence;
+
+      // Eingabefeld zurücksetzen und fokussieren
+      const input = $("cloze-input");
+      input.value = "";
+      input.disabled = false;
+      input.classList.remove("correct", "incorrect");
+      $("cloze-submit").disabled = false;
+      $("cloze-submit").textContent = "Prüfen";
+
+      // Übersetzung verstecken
+      $("cloze-translation").style.display = "none";
+      $("cloze-translate-btn").textContent = "Übersetzung anzeigen";
+      $("cloze-translation").textContent = w.beispielUebersetzung || "";
+
+      // Feedback zurücksetzen
+      const fb = $("cloze-feedback");
+      fb.className = "cloze-feedback";
+      fb.innerHTML = "";
+
+      // Fokus auf Mobile nicht erzwingen (öffnet sonst sofort die Tastatur)
+      if (window.matchMedia("(min-width: 700px)").matches) {
+        input.focus();
+      }
+    }
+
+    function checkClozeAnswer() {
+      if (cloze.answered) return;
+      const w = cloze.currentWord;
+      if (!w) return;
+
+      const userInput = $("cloze-input").value;
+      if (!userInput.trim()) return;
+
+      const normExpected = normalizeForCompare(w.loesung);
+      const normUser = normalizeForCompare(userInput);
+
+      let outcome;  // "correct" | "almost" | "wrong"
+      if (normUser === normExpected) {
+        outcome = "correct";
+      } else if (levenshtein(normUser, normExpected) === 1 && normExpected.length >= 3) {
+        outcome = "almost";  // Tippfehler von genau 1 Zeichen → "Fast"
+      } else {
+        outcome = "wrong";
+      }
+
+      showClozeFeedback(outcome);
+
+      // Score-Update: "almost" zählt als richtig (Akzent/Tippfehler tolerant),
+      // aber wir erwähnen die korrekte Schreibweise.
+      const wasCorrect = (outcome === "correct" || outcome === "almost");
+      updateWordScore(w.id, wasCorrect);
+      cloze.answered = true;
+    }
+
+    function showClozeFeedback(outcome) {
+      const w = cloze.currentWord;
+      const fb = $("cloze-feedback");
+      const input = $("cloze-input");
+      const gap = document.getElementById("cloze-gap");
+      const submit = $("cloze-submit");
+
+      input.disabled = true;
+      submit.disabled = true;
+
+      if (outcome === "correct") {
+        input.classList.add("correct");
+        if (gap) {
+          gap.textContent = w.loesung;
+          gap.classList.add("revealed");
+        }
+        fb.className = "cloze-feedback show success";
+        fb.innerHTML = `
+          <div class="cloze-feedback-title">¡Muy bien! Richtig.</div>
+          <div class="cloze-feedback-detail"><strong>${w.spanisch}</strong> = ${w.deutsch}</div>
+          <button class="cloze-next-btn" id="cloze-next-btn">Nächste Lücke →</button>
+        `;
+      } else if (outcome === "almost") {
+        input.classList.add("correct");
+        if (gap) {
+          gap.textContent = w.loesung;
+          gap.classList.add("revealed");
+        }
+        fb.className = "cloze-feedback show almost";
+        fb.innerHTML = `
+          <div class="cloze-feedback-title">Fast! Gewertet als richtig.</div>
+          <div class="cloze-feedback-detail">Korrekte Schreibweise: <strong>${w.loesung}</strong></div>
+          <button class="cloze-next-btn" id="cloze-next-btn">Nächste Lücke →</button>
+        `;
+      } else {
+        input.classList.add("incorrect");
+        if (gap) {
+          gap.textContent = w.loesung;
+          gap.classList.add("revealed");
+        }
+        fb.className = "cloze-feedback show error";
+        fb.innerHTML = `
+          <div class="cloze-feedback-title">Leider falsch.</div>
+          <div class="cloze-feedback-detail">Richtige Antwort: <strong>${w.loesung}</strong> (Lemma: <strong>${w.spanisch}</strong> — ${w.deutsch})</div>
+          <button class="cloze-next-btn" id="cloze-next-btn">Nächste Lücke →</button>
+        `;
+      }
+
+      // Statistik aktualisieren
+      renderStats();
+
+      // Weiter-Button nach Einfügen ins DOM verdrahten
+      const nextBtn = document.getElementById("cloze-next-btn");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", nextClozeWord);
+      }
+    }
+
+    function nextClozeWord() {
+      cloze.currentWord = pickClozeWord();
+      renderClozeQuestion();
+    }
+
+    // =========================================================
     // ---- Event-Bindings ----
     function bindEvents() {
       // Karte umdrehen bei Klick
@@ -914,7 +1305,37 @@
           state.mode = btn.dataset.mode;
           document.querySelectorAll(".mode-panel").forEach(p => p.classList.remove("active"));
           $("panel-" + state.mode).classList.add("active");
+
+          // Beim Wechsel in den Lückentext-Modus: erste Frage laden,
+          // falls noch keine aktiv ist
+          if (state.mode === "cloze" && !cloze.currentWord) {
+            nextClozeWord();
+          }
         });
+      });
+
+      // Lückentext: Prüfen-Button
+      $("cloze-submit").addEventListener("click", checkClozeAnswer);
+
+      // Lückentext: Enter im Eingabefeld
+      $("cloze-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (cloze.answered) {
+            // Wenn schon beantwortet, springt Enter zur nächsten Lücke
+            const nextBtn = document.getElementById("cloze-next-btn");
+            if (nextBtn) nextBtn.click();
+          } else {
+            checkClozeAnswer();
+          }
+        }
+      });
+
+      // Lückentext: Übersetzung umschalten
+      $("cloze-translate-btn").addEventListener("click", () => {
+        const tr = $("cloze-translation");
+        const visible = tr.style.display !== "none";
+        tr.style.display = visible ? "none" : "block";
+        $("cloze-translate-btn").textContent = visible ? "Übersetzung anzeigen" : "Übersetzung verbergen";
       });
 
       // Reset-Buttons
@@ -931,7 +1352,10 @@
           state.session = { correct: 0, wrong: 0, started: Date.now() };
           localStorage.removeItem(STORAGE_KEY);
           localStorage.removeItem(SESSION_KEY);
+          cloze.currentWord = null;
+          cloze.answered = false;
           renderCard();
+          if (state.mode === "cloze") nextClozeWord();
           renderStats();
         }
       });
